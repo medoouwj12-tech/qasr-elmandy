@@ -71,21 +71,19 @@ const SAMPLE_ORDERS = [
   }
 ];
 
+const safeParse = (key, fallback) => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export const MenuProvider = ({ children }) => {
-  const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem('qasr_mandi_categories');
-    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
-  });
-
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('qasr_mandi_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
-
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('qasr_mandi_orders');
-    return saved ? JSON.parse(saved) : SAMPLE_ORDERS;
-  });
+  const [categories, setCategories] = useState(() => safeParse('qasr_mandi_categories', INITIAL_CATEGORIES));
+  const [products, setProducts] = useState(() => safeParse('qasr_mandi_products', INITIAL_PRODUCTS));
+  const [orders, setOrders] = useState(() => safeParse('qasr_mandi_orders', SAMPLE_ORDERS));
 
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
