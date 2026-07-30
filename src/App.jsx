@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { MenuProvider, useMenu } from './context/MenuContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { Header } from './components/Header';
@@ -155,10 +156,12 @@ const MainMenuContent = () => {
 
 export default function App() {
   return (
-    <MenuProvider>
-      <CartProvider>
-        <MainMenuContent />
-      </CartProvider>
-    </MenuProvider>
+    <ErrorBoundary>
+      <MenuProvider>
+        <CartProvider>
+          <MainMenuContent />
+        </CartProvider>
+      </MenuProvider>
+    </ErrorBoundary>
   );
 }
