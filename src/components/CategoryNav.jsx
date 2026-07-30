@@ -14,9 +14,12 @@ export const CategoryNav = () => {
   const { categories, products, activeCategory, setActiveCategory } = useMenu();
 
   const getCategoryCount = (catId) => {
+    if (!products || !Array.isArray(products)) return 0;
     if (catId === 'all') return products.length;
-    return products.filter((p) => p.category_id === catId).length;
+    return products.filter((p) => p && p.category_id === catId).length;
   };
+
+  const safeCategories = categories && Array.isArray(categories) ? categories : [];
 
   return (
     <div className="sticky top-[105px] md:top-[73px] z-20 bg-[#0d0f12]/90 backdrop-blur-md border-b border-slate-800 py-3 shadow-md">
@@ -45,8 +48,8 @@ export const CategoryNav = () => {
           </button>
 
           {/* Category Items */}
-          {categories.map((cat) => {
-            const IconComponent = ICON_MAP[cat.icon] || UtensilsCrossed;
+          {safeCategories.map((cat) => {
+            const IconComponent = (cat.icon && ICON_MAP[cat.icon]) ? ICON_MAP[cat.icon] : UtensilsCrossed;
             const count = getCategoryCount(cat.id);
             const isActive = activeCategory === cat.id;
 
@@ -60,7 +63,7 @@ export const CategoryNav = () => {
                     : 'bg-[#161a23] text-slate-300 hover:bg-[#1f2533] hover:text-white border border-slate-800'
                 }`}
               >
-                <IconComponent className="w-4 h-4" />
+                {IconComponent ? <IconComponent className="w-4 h-4" /> : <Layers className="w-4 h-4" />}
                 <span>{cat.name_ar}</span>
                 <span
                   className={`text-xs px-2 py-0.5 rounded-full ${

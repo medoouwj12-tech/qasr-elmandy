@@ -7,8 +7,10 @@ export const ProductCard = ({ product }) => {
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
+  if (!product) return null;
+
   // Check if item is already in cart
-  const cartItem = cartItems.find((item) => item.id === product.id);
+  const cartItem = (cartItems || []).find((item) => item.id === product.id);
   const currentInCartCount = cartItem ? cartItem.quantity : 0;
 
   const handleAdd = () => {
@@ -17,6 +19,8 @@ export const ProductCard = ({ product }) => {
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
   };
+
+  const safePrice = (Number(product.price) || 0).toLocaleString();
 
   return (
     <div
@@ -29,7 +33,7 @@ export const ProductCard = ({ product }) => {
       {/* Image Container */}
       <div className="relative h-48 w-full overflow-hidden bg-slate-900">
         <img
-          src={product.image}
+          src={product.image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'}
           alt={product.name}
           className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
             !product.is_available ? 'grayscale contrast-75' : ''
@@ -82,7 +86,7 @@ export const ProductCard = ({ product }) => {
             <span className="text-[10px] text-amber-400/80 font-medium">السعر</span>
             <div className="flex items-baseline space-x-1 space-x-reverse">
               <span className="text-lg md:text-xl font-black text-amber-400">
-                {product.price.toLocaleString()}
+                {safePrice}
               </span>
               <span className="text-xs text-slate-400 font-semibold">ج.م</span>
             </div>

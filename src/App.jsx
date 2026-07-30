@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import ErrorBoundary from './components/ErrorBoundary';
 import { MenuProvider, useMenu } from './context/MenuContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { Header } from './components/Header';
@@ -18,7 +17,11 @@ const MainMenuContent = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  const activeCategoryObj = categories.find((c) => c.id === activeCategory);
+  const safeProducts = Array.isArray(filteredProducts) ? filteredProducts : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const activeCategoryObj = safeCategories.find((c) => c.id === activeCategory);
+
+  const safeTotalPrice = (Number(totalPrice) || 0).toLocaleString();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0d0f12] text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-950">
@@ -74,12 +77,12 @@ const MainMenuContent = () => {
           </div>
 
           <span className="text-xs text-slate-400 font-bold">
-            عدد الأصناف: ({filteredProducts.length})
+            عدد الأصناف: ({safeProducts.length})
           </span>
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length === 0 ? (
+        {safeProducts.length === 0 ? (
           <div className="py-16 text-center space-y-4 glass-card rounded-2xl max-w-md mx-auto my-8">
             <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center mx-auto text-slate-600 border border-slate-800">
               <UtensilsCrossed className="w-8 h-8" />
@@ -93,7 +96,7 @@ const MainMenuContent = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredProducts.map((product) => (
+            {safeProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -116,7 +119,7 @@ const MainMenuContent = () => {
 
             <div className="flex items-center space-x-2 space-x-reverse">
               <span className="text-base font-black">
-                {totalPrice.toLocaleString()} EGP
+                {safeTotalPrice} EGP
               </span>
               <ShoppingBag className="w-5 h-5" />
             </div>
@@ -152,12 +155,10 @@ const MainMenuContent = () => {
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <MenuProvider>
-        <CartProvider>
-          <MainMenuContent />
-        </CartProvider>
-      </MenuProvider>
-    </ErrorBoundary>
+    <MenuProvider>
+      <CartProvider>
+        <MainMenuContent />
+      </CartProvider>
+    </MenuProvider>
   );
 }

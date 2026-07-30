@@ -7,6 +7,8 @@ export const Header = ({ onOpenAdmin, onOpenCart }) => {
   const { totalItems, totalPrice } = useCart();
   const { searchQuery, setSearchQuery } = useMenu();
 
+  const safeTotalPrice = (Number(totalPrice) || 0).toLocaleString();
+
   return (
     <header className="sticky top-0 z-30 bg-[#0d0f12]/95 backdrop-blur-md border-b border-amber-900/30 shadow-2xl">
       {/* Top Banner Bar */}
@@ -73,7 +75,7 @@ export const Header = ({ onOpenAdmin, onOpenCart }) => {
             <input
               type="text"
               placeholder="ابحث عن وجبتك المفضلة (مندي، كفتة، طرب، سمان...)"
-              value={searchQuery}
+              value={searchQuery || ''}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#161a23] border border-amber-500/20 rounded-xl pr-10 pl-4 py-2 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all shadow-inner"
             />
@@ -95,7 +97,7 @@ export const Header = ({ onOpenAdmin, onOpenCart }) => {
             <span>السلة</span>
             {totalItems > 0 && (
               <span className="bg-slate-950 text-amber-300 font-extrabold text-xs px-2.5 py-0.5 rounded-full">
-                {totalItems} ({totalPrice.toLocaleString()} ج.م)
+                {totalItems} ({safeTotalPrice} ج.م)
               </span>
             )}
           </button>

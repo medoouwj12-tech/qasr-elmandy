@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Send } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, Send } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export const CartDrawer = ({ isOpen, onClose, onProceedCheckout }) => {
@@ -7,6 +7,8 @@ export const CartDrawer = ({ isOpen, onClose, onProceedCheckout }) => {
     useCart();
 
   if (!isOpen) return null;
+
+  const safeTotalPrice = (Number(totalPrice) || 0).toLocaleString();
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden animate-fade-in">
@@ -38,7 +40,7 @@ export const CartDrawer = ({ isOpen, onClose, onProceedCheckout }) => {
 
           {/* Cart Items List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 divide-y divide-slate-800/60">
-            {cartItems.length === 0 ? (
+            {(!cartItems || cartItems.length === 0) ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
                 <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800 text-slate-600">
                   <ShoppingBag className="w-10 h-10" />
@@ -57,59 +59,63 @@ export const CartDrawer = ({ isOpen, onClose, onProceedCheckout }) => {
                 </button>
               </div>
             ) : (
-              cartItems.map((item) => (
-                <div key={item.id} className="pt-3 first:pt-0 flex items-center justify-between space-x-3 space-x-reverse">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-14 h-14 rounded-xl object-cover border border-slate-800 bg-slate-900"
-                  />
-                  
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-white truncate">{item.name}</h4>
-                    <p className="text-xs text-amber-400 font-semibold mt-0.5">
-                      {item.price.toLocaleString()} ج.م × {item.quantity} ={' '}
-                      <span className="font-black text-amber-300">
-                        {(item.price * item.quantity).toLocaleString()} ج.م
-                      </span>
-                    </p>
-                  </div>
-
-                  {/* Quantity Stepper & Remove */}
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <div className="flex items-center bg-[#161a23] border border-slate-800 rounded-lg p-0.5">
-                      <button
-                        onClick={() => updateQuantity(item.id, -1)}
-                        className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-amber-400 rounded transition-colors"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="w-5 text-center text-xs font-bold text-amber-300">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(item.id, 1)}
-                        className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-amber-400 rounded transition-colors"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
+              cartItems.map((item) => {
+                const itemPrice = Number(item.price) || 0;
+                const itemTotal = itemPrice * item.quantity;
+                return (
+                  <div key={item.id} className="pt-3 first:pt-0 flex items-center justify-between space-x-3 space-x-reverse">
+                    <img
+                      src={item.image || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'}
+                      alt={item.name}
+                      className="w-14 h-14 rounded-xl object-cover border border-slate-800 bg-slate-900"
+                    />
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-white truncate">{item.name}</h4>
+                      <p className="text-xs text-amber-400 font-semibold mt-0.5">
+                        {itemPrice.toLocaleString()} ج.م × {item.quantity} ={' '}
+                        <span className="font-black text-amber-300">
+                          {itemTotal.toLocaleString()} ج.م
+                        </span>
+                      </p>
                     </div>
 
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-950/50 rounded-lg transition-colors"
-                      title="حذف من السلة"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {/* Quantity Stepper & Remove */}
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <div className="flex items-center bg-[#161a23] border border-slate-800 rounded-lg p-0.5">
+                        <button
+                          onClick={() => updateQuantity(item.id, -1)}
+                          className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-amber-400 rounded transition-colors"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="w-5 text-center text-xs font-bold text-amber-300">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, 1)}
+                          className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-amber-400 rounded transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-950/50 rounded-lg transition-colors"
+                        title="حذف من السلة"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
           {/* Footer Summary & Checkout */}
-          {cartItems.length > 0 && (
+          {cartItems && cartItems.length > 0 && (
             <div className="p-4 border-t border-slate-800 bg-[#161a23] space-y-3">
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <button
@@ -126,7 +132,7 @@ export const CartDrawer = ({ isOpen, onClose, onProceedCheckout }) => {
                 <span className="text-sm font-bold text-slate-200">إجمالي الحساب:</span>
                 <div className="flex items-baseline space-x-1 space-x-reverse">
                   <span className="text-2xl font-black text-amber-400">
-                    {totalPrice.toLocaleString()}
+                    {safeTotalPrice}
                   </span>
                   <span className="text-xs font-semibold text-slate-400">ج.م</span>
                 </div>
