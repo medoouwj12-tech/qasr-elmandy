@@ -1,6 +1,6 @@
-const { Pool } = require('@neondatabase/serverless');
+import { Pool } from '@neondatabase/serverless';
 
-function getDbPool() {
+export function getDbPool() {
   const connectionString =
     process.env.DATABASE_URL ||
     process.env.NEON_DATABASE_URL ||
@@ -12,5 +12,3 @@ function getDbPool() {
 
   return new Pool({ connectionString });
 }
-
-module.exports = { getDbPool };

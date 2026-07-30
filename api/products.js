@@ -1,6 +1,6 @@
-const { getDbPool } = require('./_db');
+import { getDbPool } from './_db.js';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   const pool = getDbPool();
 
   if (!pool) {
@@ -51,4 +51,4 @@ module.exports = async function handler(req, res) {
     console.error('API Products Error:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
-};
+}

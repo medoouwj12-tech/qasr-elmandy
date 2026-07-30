@@ -1,4 +1,4 @@
-const { getDbPool } = require('./_db');
+import { getDbPool } from './_db.js';
 
 const INITIAL_CATEGORIES = [
   { id: "cat_1", name_ar: "وجبات قصر المندى واللحوم", name_en: "Mandi & Meat Meals", icon: "UtensilsCrossed", order: 1 },
@@ -8,7 +8,7 @@ const INITIAL_CATEGORIES = [
   { id: "cat_5", name_ar: "مشروبات قصر المندى", name_en: "Beverages", icon: "Coffee", order: 5 }
 ];
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   const pool = getDbPool();
 
   if (!pool) {
@@ -21,7 +21,6 @@ module.exports = async function handler(req, res) {
   try {
     const client = await pool.connect();
 
-    // 1. Create Tables
     await client.query(`
       CREATE TABLE IF NOT EXISTS categories (
           id VARCHAR(50) PRIMARY KEY,
@@ -58,7 +57,6 @@ module.exports = async function handler(req, res) {
       );
     `);
 
-    // 2. Insert Categories
     for (const cat of INITIAL_CATEGORIES) {
       await client.query(
         `INSERT INTO categories (id, name_ar, name_en, icon, order_index)
@@ -78,4 +76,4 @@ module.exports = async function handler(req, res) {
     console.error('Neon Init Error:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
-};
+}
