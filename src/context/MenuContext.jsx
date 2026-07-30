@@ -3,7 +3,6 @@ import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from '../data/initialData';
 
 const MenuContext = createContext();
 
-// Sample initial sales history data for rich analytics demo
 const SAMPLE_ORDERS = [
   {
     id: "ord_1001",
@@ -15,7 +14,7 @@ const SAMPLE_ORDERS = [
     whatsapp_number: "01066568284",
     total_price: 970.00,
     status: "completed",
-    date: new Date().toISOString(), // Today
+    date: new Date().toISOString(),
     items: [
       { id: "p1", name: "Quarter Mandi Chicken", quantity: 2, price: 170.00 },
       { id: "p41", name: "فرخة مندي مع رز بسمتي شوربة وسلطة وطحينة (صينية بدوي)", quantity: 1, price: 600.00 },
@@ -32,75 +31,77 @@ const SAMPLE_ORDERS = [
     whatsapp_number: "01098128320",
     total_price: 3200.00,
     status: "completed",
-    date: new Date().toISOString(), // Today
+    date: new Date().toISOString(),
     items: [
       { id: "p47", name: "صنية التوفير", quantity: 1, price: 3200.00 }
-    ]
-  },
-  {
-    id: "ord_1003",
-    customer_name: "د. هاني مصطفى",
-    order_type: "table",
-    table_number: "ترابيزة VIP 1",
-    delivery_address: "",
-    notes: "شاي بدوي بعد الأكل",
-    whatsapp_number: "01066568284",
-    total_price: 1800.00,
-    status: "completed",
-    date: new Date().toISOString(), // Today
-    items: [
-      { id: "p53", name: "صنيه الحبيبه", quantity: 1, price: 1800.00 }
-    ]
-  },
-  {
-    id: "ord_1004",
-    customer_name: "محمود حسن",
-    order_type: "delivery",
-    table_number: "",
-    delivery_address: "شارع النصر، مدينة نصر",
-    notes: "بدون ثومية",
-    whatsapp_number: "01098128320",
-    total_price: 770.00,
-    status: "completed",
-    date: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-    items: [
-      { id: "p3", name: "Quarter Mandi Meat", quantity: 1, price: 400.00 },
-      { id: "p10", name: "1/4 kg Grilled Kebab", quantity: 1, price: 300.00 },
-      { id: "p98", name: "حواوشي بلدي", quantity: 1, price: 70.00 }
     ]
   }
 ];
 
-const safeParse = (key, fallback) => {
-  try {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
 export const MenuProvider = ({ children }) => {
-  const [categories, setCategories] = useState(() => safeParse('qasr_mandi_categories', INITIAL_CATEGORIES));
-  const [products, setProducts] = useState(() => safeParse('qasr_mandi_products', INITIAL_PRODUCTS));
-  const [orders, setOrders] = useState(() => safeParse('qasr_mandi_orders', SAMPLE_ORDERS));
+  const [categories, setCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem('qasr_mandi_categories');
+      return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+    } catch (e) {
+      return INITIAL_CATEGORIES;
+    }
+  });
+
+  const [products, setProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('qasr_mandi_products');
+      return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    } catch (e) {
+      return INITIAL_PRODUCTS;
+    }
+  });
+
+  const [orders, setOrders] = useState(() => {
+    try {
+      const saved = localStorage.getItem('qasr_mandi_orders');
+      return saved ? JSON.parse(saved) : SAMPLE_ORDERS;
+    } catch (e) {
+      return SAMPLE_ORDERS;
+    }
+  });
 
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Synchronize with API if available
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+        }
+      })
+      .catch(() => {
+        // Silently use localStorage fallback
+      });
+  }, []);
+
   // Persist categories
   useEffect(() => {
-    localStorage.setItem('qasr_mandi_categories', JSON.stringify(categories));
+    try {
+      localStorage.setItem('qasr_mandi_categories', JSON.stringify(categories));
+    } catch (e) {}
   }, [categories]);
 
   // Persist products
   useEffect(() => {
-    localStorage.setItem('qasr_mandi_products', JSON.stringify(products));
+    try {
+      localStorage.setItem('qasr_mandi_products', JSON.stringify(products));
+    } catch (e) {}
   }, [products]);
 
   // Persist orders
   useEffect(() => {
-    localStorage.setItem('qasr_mandi_orders', JSON.stringify(orders));
+    try {
+      localStorage.setItem('qasr_mandi_orders', JSON.stringify(orders));
+    } catch (e) {}
   }, [orders]);
 
   // Orders Management
@@ -112,6 +113,14 @@ export const MenuProvider = ({ children }) => {
       status: 'completed'
     };
     setOrders((prev) => [newOrder, ...prev]);
+
+    // Async push to serverless API if live
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder)
+    }).catch(() => {});
+
     return newOrder;
   };
 
@@ -127,10 +136,12 @@ export const MenuProvider = ({ children }) => {
 
   const clearOrdersHistory = () => {
     setOrders([]);
-    localStorage.removeItem('qasr_mandi_orders');
+    try {
+      localStorage.removeItem('qasr_mandi_orders');
+    } catch (e) {}
   };
 
-  // Admin Actions - Product CRUD
+  // Product CRUD
   const addProduct = (newProduct) => {
     const id = 'p_' + Date.now();
     const productToAdd = {
@@ -141,6 +152,13 @@ export const MenuProvider = ({ children }) => {
       order: products.length + 1
     };
     setProducts((prev) => [productToAdd, ...prev]);
+
+    fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productToAdd)
+    }).catch(() => {});
+
     return productToAdd;
   };
 
@@ -148,6 +166,12 @@ export const MenuProvider = ({ children }) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p))
     );
+
+    fetch('/api/products', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...updatedFields })
+    }).catch(() => {});
   };
 
   const deleteProduct = (id) => {
@@ -156,11 +180,22 @@ export const MenuProvider = ({ children }) => {
 
   const toggleAvailability = (id) => {
     setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, is_available: !p.is_available } : p))
+      prev.map((p) => {
+        if (p.id === id) {
+          const updated = { ...p, is_available: !p.is_available };
+          fetch('/api/products', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: p.id, is_available: updated.is_available })
+          }).catch(() => {});
+          return updated;
+        }
+        return p;
+      })
     );
   };
 
-  // Admin Actions - Category CRUD
+  // Category CRUD
   const addCategory = (newCat) => {
     const id = 'cat_' + Date.now();
     const categoryToAdd = {
@@ -186,18 +221,21 @@ export const MenuProvider = ({ children }) => {
     setCategories(INITIAL_CATEGORIES);
     setProducts(INITIAL_PRODUCTS);
     setOrders(SAMPLE_ORDERS);
-    localStorage.removeItem('qasr_mandi_categories');
-    localStorage.removeItem('qasr_mandi_products');
-    localStorage.removeItem('qasr_mandi_orders');
+    try {
+      localStorage.removeItem('qasr_mandi_categories');
+      localStorage.removeItem('qasr_mandi_products');
+      localStorage.removeItem('qasr_mandi_orders');
+    } catch (e) {}
   };
 
-  // Compute filtered products
-  const filteredProducts = products.filter((product) => {
+  // Filter products safely
+  const filteredProducts = (products || []).filter((product) => {
+    if (!product) return false;
     const matchesCategory =
       activeCategory === 'all' || product.category_id === activeCategory;
     const matchesSearch =
       searchQuery.trim() === '' ||
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.name && product.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (product.description &&
         product.description.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
